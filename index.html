@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
@@ -355,9 +355,11 @@
       jarvisReplyEl.innerText = "İşleniyor...";
       statusText.innerText = "⏳ Lavender yanıt oluşturuyor...";
 
+      // Ekran görüntündeki aktif ve güncel modeller eklendi
       const modelsToTry = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant"
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
+        "qwen/qwen3.8-27b"
       ];
 
       let success = false;
