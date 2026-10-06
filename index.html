@@ -217,7 +217,7 @@
   </header>
 
   <div class="api-container">
-    <input type="password" id="api-key" class="api-input" placeholder="Groq API Key (gsk_...)" />
+    <input type="password" id="api-key" class="api-input" placeholder="Groq API Key Yapıştırın" />
     <button class="api-btn" onclick="saveApiKey()">Kaydet</button>
   </div>
 
@@ -240,7 +240,7 @@
   </div>
 
   <div class="status-bar" id="status-text">
-    💡 API Key girip Kaydet butonuna basın.
+    ⚡ Sistem Hazır!
   </div>
 
   <script>
@@ -262,8 +262,10 @@
       if (key) {
         localStorage.setItem("jarvis_groq_key", key);
         apiKey = key;
-        statusText.innerText = "⚡ API Key Kaydedildi!";
-        alert("API Key telefona kaydedildi!");
+        statusText.innerText = "⚡ Yeni API Key Kaydedildi!";
+        alert("API Key cihazınıza güvenle kaydedildi!");
+      } else {
+        alert("Lütfen geçerli bir anahtar girin.");
       }
     }
 
@@ -353,36 +355,43 @@
       jarvisReplyEl.innerText = "İşleniyor...";
       statusText.innerText = "⏳ Lavender yanıt oluşturuyor...";
 
-      try {
-        let res = await callGroqAPI("llama-3.1-8b-instant", userQuery, currentKey);
+      const modelsToTry = [
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant"
+      ];
 
-        if (!res.ok) {
-          res = await callGroqAPI("llama-3.3-70b-versatile", userQuery, currentKey);
-        }
+      let success = false;
+      let lastErrorMessage = "";
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.choices && data.choices[0]) {
-            const aiReply = data.choices[0].message.content;
-            statusText.innerText = "✅ Yanıt Başarıyla Alındı";
-            speak(aiReply);
+      for (const model of modelsToTry) {
+        try {
+          const res = await callGroqAPI(model, userQuery, currentKey);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.choices && data.choices[0]) {
+              const aiReply = data.choices[0].message.content;
+              statusText.innerText = "✅ Yanıt Alındı (" + model + ")";
+              speak(aiReply);
+              success = true;
+              break;
+            }
           } else {
-            speak("Boş yanıt döndü Efendim.");
+            const errData = await res.json();
+            lastErrorMessage = errData.error ? errData.error.message : "API Hatası";
           }
-        } else {
-          const errData = await res.json();
-          const errorMsg = errData.error ? errData.error.message : "Bilinmeyen API Hatası";
-          statusText.innerText = "❌ Hata: " + errorMsg;
-          alert("Groq API Hatası: " + errorMsg);
-          speak("API anahtarınızda sorun var Efendim.");
+        } catch (e) {
+          lastErrorMessage = e.message;
         }
-      } catch (error) {
-        statusText.innerText = "❌ Bağlantı Hatası: " + error.message;
-        speak("Ağ bağlantısı kurulamadı Efendim.");
-      } finally {
-        coreBtn.className = "core-container";
-        coreText.innerHTML = "DOKUN<br>KONUŞ";
       }
+
+      if (!success) {
+        statusText.innerText = "❌ Hata: " + lastErrorMessage;
+        alert("Groq Hata Detayı:\n" + lastErrorMessage);
+        speak("Üzgünüm Efendim, bağlantı kurulamadı. Lütfen API anahtarınızı kontrol edin.");
+      }
+
+      coreBtn.className = "core-container";
+      coreText.innerHTML = "DOKUN<br>KONUŞ";
     }
 
     function startListening() {
